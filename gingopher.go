@@ -1,4 +1,4 @@
-package gingopher
+package gingopherjs
 
 import (
 	"io/ioutil"
@@ -17,7 +17,7 @@ type (
 	}
 )
 
-func NewGinGoper(pkg string) (*GinGopher, error) {
+func New(pkg string) (*GinGopher, error) {
 	return &GinGopher{
 		pkg: pkg,
 	}, nil
