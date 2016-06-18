@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	gbuild "github.com/gopherjs/gopherjs/build"
@@ -23,7 +24,7 @@ func New(pkg string) (*GinGopher, error) {
 	}, nil
 }
 
-func (p *GinGopher) Handler(c *gin.Context) {
+func (g *GinGopher) Handler(c *gin.Context) {
 	f, err := ioutil.TempFile("", "gingopher")
 	if err != nil {
 		c.String(200, "console.error(%s);", strconv.Quote(err.Error()))
@@ -45,11 +46,21 @@ func (p *GinGopher) Handler(c *gin.Context) {
 		Color:         true,
 	}
 
-	// FIXME: This will not work with multiple GOPATH's
-	path := path.Join(os.Getenv("GOPATH"), "src", p.pkg)
+	finalPath := "/"
+
+	// Try to deduce the package path.
+	paths := strings.Split(options.GOPATH, ":")
+	for _, p := range paths {
+		candidatePath := path.Join(p, "src", g.pkg)
+		st, e := os.Stat(candidatePath)
+		if e == nil && st.IsDir() {
+			finalPath = candidatePath
+			break
+		}
+	}
 
 	s := gbuild.NewSession(options)
-	err = s.BuildDir(path, p.pkg, filename)
+	err = s.BuildDir(finalPath, g.pkg, filename)
 	if err != nil {
 		c.String(200, "console.error(%s);", strconv.Quote(err.Error()))
 		return
